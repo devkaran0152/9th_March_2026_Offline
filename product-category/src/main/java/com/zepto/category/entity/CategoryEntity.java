@@ -7,6 +7,7 @@ import com.zepto.product.entity.ProductEntity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,7 +30,7 @@ public class CategoryEntity {
 
 	private LocalDateTime createdAt;
     
-	@OneToMany(mappedBy = "category" , cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "category" , cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<ProductEntity> products;
 	
 	

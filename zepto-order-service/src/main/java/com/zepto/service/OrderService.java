@@ -11,8 +11,10 @@ import com.zepto.order.request.OrderRequest;
 import com.zepto.order.response.OrderResponse;
 import com.zepto.payment.repository.PaymentRepository;
 import com.zepto.repository.OrderRepository;
+import com.zepto.service.kafka.KafkaService;
 
 import jakarta.transaction.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class OrderService {
@@ -22,6 +24,9 @@ public class OrderService {
 
 	@Autowired
 	PaymentRepository paymentRepository;
+
+	@Autowired
+	KafkaService kafkaService;
 
 	@Transactional
 	public OrderResponse acceptOrder(OrderRequest orderRequest) {
@@ -53,10 +58,10 @@ public class OrderService {
 
 		PaymentEntity responsePaymentEntity = paymentRepository.save(paymentEntity);
 
-		if (something.equals("nothing")) // NPE
-		{
-			System.out.println("this is dummy code...");
-		}
+		/*
+		 * if (something.equals("nothing")) // NPE {
+		 * System.out.println("this is dummy code..."); }
+		 */
 		if (responsePaymentEntity.getId() > 0) {
 
 			orderResponse.setOrderId(responseEntity.getOrderId());
@@ -73,6 +78,14 @@ public class OrderService {
 		}
 		System.out.println("OrderService.acceptOrder() ::::: END");
 
+
+		if (responsePaymentEntity.getStatus().equalsIgnoreCase("paid")) {
+			System.out.println("OrderService.acceptOrder().... order paid. sending message to kafka");
+			String data = objToJson(orderResponse);
+			kafkaService.sendMessage("order-paid", data);
+		}
+		
+		
 		return orderResponse;
 	}
 
@@ -93,7 +106,13 @@ public class OrderService {
 		String ref = "REF" + 100 + random.nextInt(900);
 		return ref;
 	}
+	
+	private String objToJson(OrderResponse response)
+	{
+		  ObjectMapper objectMapper = new ObjectMapper();
 
-	
-	
+	        String json = objectMapper.writeValueAsString(response);
+	        return json;
+	}
+
 }
